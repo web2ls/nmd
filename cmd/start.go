@@ -17,6 +17,7 @@ package cmd
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -30,16 +31,49 @@ var startCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Deletting node_modules folder...")
 
-		err := os.RemoveAll("node_modules")
+		dirContent, err := ioutil.ReadDir(".")
+		checkError(err)
 
-		if err != nil {
-			fmt.Println("folder not found or error occurs on deleting")
-		} else {
-			fmt.Println("Folder has been deleted")
+		var directoryList []string
+		fmt.Println(dirContent)
+		for _, item := range dirContent {
+			if item.IsDir() {
+				directoryList = append(directoryList, item.Name())
+			}
 		}
+
+		fmt.Println(directoryList)
+
+		for _, checkingDir := range directoryList {
+			fmt.Println(checkingDir)
+			err = os.Chdir(checkingDir)
+			checkError(err)
+
+			err = os.RemoveAll("node_modules")
+			checkError(err)
+
+			// fmt.Println("Folder has been deleted")
+
+			err = os.Chdir("./../")
+			checkError(err)
+		}
+
+		fmt.Println("All folders has been deleted")
+
+		// err := os.RemoveAll("node_modules")
+
+		// checkError(err)
+
+		// fmt.Println("Folder has been deleted")
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(startCmd)
+}
+
+func checkError(err error) {
+	if err != nil {
+		panic(err)
+	}
 }
