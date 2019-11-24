@@ -31,49 +31,55 @@ var startCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Deletting node_modules folder...")
 
-		dirContent, err := ioutil.ReadDir(".")
-		checkError(err)
+		isDeepFlag, _ := cmd.Flags().GetBool("deep")
 
-		var directoryList []string
-		fmt.Println(dirContent)
-		for _, item := range dirContent {
-			if item.IsDir() {
-				directoryList = append(directoryList, item.Name())
-			}
+		if isDeepFlag {
+			deleteMultipleTargetFolder()
+		} else {
+			deleteSingleTargetFolder()
 		}
-
-		fmt.Println(directoryList)
-
-		for _, checkingDir := range directoryList {
-			fmt.Println(checkingDir)
-			err = os.Chdir(checkingDir)
-			checkError(err)
-
-			err = os.RemoveAll("node_modules")
-			checkError(err)
-
-			// fmt.Println("Folder has been deleted")
-
-			err = os.Chdir("./../")
-			checkError(err)
-		}
-
-		fmt.Println("All folders has been deleted")
-
-		// err := os.RemoveAll("node_modules")
-
-		// checkError(err)
-
-		// fmt.Println("Folder has been deleted")
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(startCmd)
+	startCmd.Flags().BoolP("deep", "d", false, "delete target folder from all folders inside on one deep level")
 }
 
 func checkError(err error) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func deleteSingleTargetFolder() {
+	err := os.RemoveAll("node_modules")
+	checkError(err)
+
+	fmt.Println("Folder has been deleted")
+}
+
+func deleteMultipleTargetFolder() {
+	dirContent, err := ioutil.ReadDir(".")
+	checkError(err)
+
+	var directoryList []string
+	for _, item := range dirContent {
+		if item.IsDir() {
+			directoryList = append(directoryList, item.Name())
+		}
+	}
+
+	for _, checkingDir := range directoryList {
+		err = os.Chdir(checkingDir)
+		checkError(err)
+
+		err = os.RemoveAll("node_modules")
+		checkError(err)
+
+		err = os.Chdir("./../")
+		checkError(err)
+	}
+
+	fmt.Println("All target folders inside has been deleted")
 }
